@@ -1,7 +1,5 @@
 # Codex Reset Radar
 
-Live: [https://tibo.wu2chen.com](https://tibo.wu2chen.com)
-
 A source-first dashboard that answers one question:
 
 > Is OpenAI likely to reset Codex usage limits soon, has a reset been announced, or has one already happened?
@@ -9,6 +7,10 @@ A source-first dashboard that answers one question:
 It monitors public posts from Codex lead Tibo Sottiaux (`@thsottiaux`), classifies reset signals with MiniMax, extracts timing, translates the source tweet, and can alert Telegram.
 
 This is not an OpenAI product. It never spends a banked reset, never stores ChatGPT passwords, and never scrapes private ChatGPT pages.
+
+Live: [https://tibo.wu2chen.com](https://tibo.wu2chen.com)
+
+![Dashboard](docs/screenshots/dashboard.png)
 
 ## Architecture
 
