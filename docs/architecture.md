@@ -7,13 +7,13 @@ User → Next.js dashboard (Vercel)
                 ↑
          Supabase PostgreSQL
                 ↑
-External cron / Vercel Cron
+cron-job.org every 5 minutes (GitHub Actions backup)
   GET /api/cron/check-tibo
     → SocialSource (XSource | ManualSource)
     → dedupe posts.external_id
-    → AIAnalyzer (Grok / OpenAI-compatible)
+    → AIAnalyzer (MiniMax / xAI / OpenAI-compatible)
     → ResetEngine + event correlation
-    → NotificationEngine
+    → NotificationEngine (Telegram + browser)
     → monitor_runs
 ```
 

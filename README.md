@@ -1,47 +1,47 @@
 # Codex Reset Radar
 
+Live: [https://tibo.wu2chen.com](https://tibo.wu2chen.com)
+
 A source-first dashboard that answers one question:
 
 > Is OpenAI likely to reset Codex usage limits soon, has a reset been announced, or has one already happened?
 
-It monitors public posts from Codex lead Tibo Sottiaux (`@thsottiaux`), runs semantic analysis, classifies reset signals, extracts timing, and updates a live dashboard.
+It monitors public posts from Codex lead Tibo Sottiaux (`@thsottiaux`), classifies reset signals with MiniMax, extracts timing, translates the source tweet, and can alert Telegram.
 
-This is not an OpenAI product. It never spends a banked reset, never stores ChatGPT passwords, and never scrapes private account pages.
-
-![Dashboard screenshot](docs/screenshots/dashboard.png)
-
-_Add a screenshot at `docs/screenshots/dashboard.png` after the first deploy._
+This is not an OpenAI product. It never spends a banked reset, never stores ChatGPT passwords, and never scrapes private ChatGPT pages.
 
 ## Architecture
 
 ```
-User → Next.js (Vercel)
+User → Next.js dashboard (Vercel)
          ↑
       Supabase Postgres
          ↑
-Cron (Vercel or any HTTPS cron)
+cron-job.org  (primary, every 5 minutes)
+GitHub Actions (backup)
   GET /api/cron/check-tibo
-    SocialSource → dedupe → AIAnalyzer → ResetEngine → notifications → dashboard
+    XSource → dedupe → MiniMax analyzer → ResetEngine → Telegram / browser → dashboard
 ```
 
 Details: [docs/architecture.md](docs/architecture.md)
 
 ## Data flow
 
-1. Cron authenticates with `CRON_SECRET`.
-2. `XSource` fetches Tibo's latest public posts.
-3. Posts are stored once (`platform + external_id` unique).
-4. New posts go through Grok (default) or another OpenAI-compatible analyzer.
-5. The reset engine opens or updates a single event when multiple posts describe the same reset.
-6. The dashboard shows `NO RESET ANNOUNCED`, `POSSIBLE RESET`, `RESET INCOMING`, `GLOBAL RESET LIVE`, or `BANKED RESET AVAILABLE`.
+1. Cron authenticates with `Authorization: Bearer CRON_SECRET`.
+2. `XSource` fetches Tibo’s latest public posts.
+3. Posts are stored once (`platform + external_id`).
+4. New posts are classified by MiniMax (`MiniMax-M3`) and translated to Simplified Chinese.
+5. Related posts within 72 hours merge into one reset event.
+6. The dashboard shows no-reset / possible / incoming / live / banked / completed, plus original tweet and translation.
 
 ## Tech stack
 
 - Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui
-- Vercel Functions + optional Vercel Cron
+- Vercel Hobby + serverless functions
 - Supabase PostgreSQL
-- Zod, Luxon, Vitest
-- pnpm
+- MiniMax Token Plan for analysis
+- cron-job.org for scheduling
+- Zod, Luxon, Vitest, pnpm
 
 ## Local development
 
@@ -53,8 +53,6 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Without Supabase the UI still loads in an empty/setup state.
-
 ```bash
 pnpm lint
 pnpm typecheck
@@ -62,113 +60,70 @@ pnpm test
 pnpm build
 ```
 
-## Supabase setup
-
-1. Create a project at [supabase.com](https://supabase.com).
-2. Copy the project URL, anon key, and service role key.
-3. Run `supabase/migrations/20260913000001_init.sql` in the SQL editor.
-4. Confirm RLS is enabled. The migration grants public `SELECT` only. Writes go through the service role on the server.
-
 ## Environment variables
 
-See `.env.example`.
+See `.env.example`. Never commit `.env.local`.
 
 | Variable | Where | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_APP_URL` | Vercel / local | Canonical URL |
+| `NEXT_PUBLIC_APP_URL` | Public | Canonical site URL |
 | `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase API URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Read-only client key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server only | Cron writes |
-| `X_BEARER_TOKEN` | Server only | Official X API |
-| `XAI_API_KEY` or `AI_API_KEY` | Server only | Analyzer. MiniMax Token Plan keys start with `sk-cp-` |
-| `AI_PROVIDER` | Server only | `xai` (default), `openai`, or `minimax` |
-| `AI_MODEL` | Server only | Default `grok-4.6` / `MiniMax-M3` / `gpt-4.1-mini` |
-| `AI_BASE_URL` | Server only | Optional. MiniMax China: `https://api.minimaxi.com/v1` |
-| `CRON_SECRET` | Server only | Protects `/api/cron/check-tibo` |
-| `ALLOW_MANUAL_INGEST` | Server only | Enables `/dev/ingest` in production |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Read-only key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server | Cron writes |
+| `X_BEARER_TOKEN` | Server | Official X API |
+| `AI_PROVIDER` | Server | `minimax` (this deploy), `xai`, or `openai` |
+| `AI_API_KEY` | Server | MiniMax Token Plan key (`sk-cp-...`) |
+| `AI_MODEL` | Server | `MiniMax-M3` |
+| `AI_BASE_URL` | Server | China: `https://api.minimaxi.com/v1` |
+| `CRON_SECRET` | Server | Protects `/api/cron/check-tibo` |
+| `TELEGRAM_BOT_TOKEN` | Server | Optional Telegram alerts |
+| `TELEGRAM_CHAT_ID` | Server | Telegram chat id |
+| `ALLOW_MANUAL_INGEST` | Server | Production must be `false` |
+| `DEFAULT_TIMEZONE` | Server | `Asia/Shanghai` |
 
-Never commit `.env.local`. Never put the service role key, X token, AI key, or cron secret in client code.
+## Cron (cron-job.org)
 
-## X API setup
+Vercel Hobby cannot run a 5-minute native cron. Use [cron-job.org](https://cron-job.org) (free):
 
-1. Create a developer app at [developer.x.com](https://developer.x.com).
-2. Issue a Bearer Token with permission to read public tweets.
-3. Set `X_BEARER_TOKEN`.
-4. The app reads `@thsottiaux` via `GET /2/users/by/username/:username` and `GET /2/users/:id/tweets`.
+| Field | Value |
+| --- | --- |
+| URL | `https://tibo.wu2chen.com/api/cron/check-tibo` |
+| Method | `GET` |
+| Header | `Authorization: Bearer <CRON_SECRET>` |
+| Schedule | every 5 minutes (`*/5 * * * *`) |
+| HTTP authentication | off |
 
-If X is down or the token is missing, the dashboard keeps history and shows that the source is temporarily unavailable.
+Do not use a Vercel URL that has Deployment Protection (SSO). Use the custom domain or an unprotected `*.vercel.app` alias.
 
-## AI setup
-
-Default provider is xAI Grok.
-
-1. Create a key at [console.x.ai](https://console.x.ai).
-2. Set `XAI_API_KEY`.
-3. Optional: `AI_MODEL=grok-4.6`.
-
-MiniMax Token Plan is supported. Use the **Subscription Key** from Billing → Token Plan (`sk-cp-...`), not a pay-as-you-go API key:
-
-```env
-AI_PROVIDER=minimax
-AI_API_KEY=sk-cp-...
-AI_MODEL=MiniMax-M3
-AI_BASE_URL=https://api.minimax.io/v1
-```
-
-China-region accounts should set `AI_BASE_URL=https://api.minimaxi.com/v1`.
-
-`AI_PROVIDER=openai` plus `AI_API_KEY` switches to OpenAI. Invalid model JSON is never written as `UNRELATED`; the post is stored and analysis stays `pending` for the next cron.
-
-## Cron setup
-
-### External cron (works on Vercel Hobby)
-
-Call every 5 minutes:
-
-```bash
-curl -X GET "$NEXT_PUBLIC_APP_URL/api/cron/check-tibo" \
-  -H "Authorization: Bearer $CRON_SECRET"
-```
-
-Any HTTPS cron works (cron-job.org, GitHub Actions, EasyCron).
-
-### Optional native Vercel Cron
-
-`vercel.json` already contains:
+Test run should return HTTP 200:
 
 ```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/check-tibo",
-      "schedule": "*/5 * * * *"
-    }
-  ]
-}
+{"success":true,"postsFetched":9,"newPosts":0}
 ```
 
-Vercel Hobby may not run 5-minute native cron. Keep an external caller as the reliable path. Native cron still needs `CRON_SECRET`. If Vercel does not send the header, add it in the dashboard or keep using the external caller.
+GitHub Actions workflow `.github/workflows/check-tibo.yml` is an optional backup. The monitor is idempotent.
 
-## Vercel deployment
+## Telegram
 
-1. Push this repository to GitHub.
-2. Import the repo in Vercel.
-3. Add the environment variables above.
-4. Apply the Supabase migration.
-5. Deploy.
-6. Point an external cron at `/api/cron/check-tibo`.
-7. Open `/status`.
-8. In development, use `/dev/ingest` to run sample posts.
-9. Confirm rows in `posts`, `analyses`, `reset_events`, and `monitor_runs`.
-10. Enable browser notifications in Settings if you want desktop alerts while the site is open.
+1. Create a bot with [@BotFather](https://t.me/BotFather).
+2. Start a chat with the bot, then read `chat.id` from `getUpdates`.
+3. Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` on Vercel and redeploy.
 
-## Notification setup
+Alerts fire for global / banked / upcoming / completed resets. High-confidence teasers only. Unrelated posts never notify. Each event status is sent once per provider.
 
-The first provider queues browser notifications. The dashboard polls `/api/notifications/pending` and uses the Notification API when permission is granted.
+## X API
 
-Set both `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` to also send Telegram messages. Create a bot with [@BotFather](https://t.me/BotFather), start a chat with the bot, then get your chat id from `https://api.telegram.org/bot<token>/getUpdates`.
+Pay-per-use. A Bearer Token is required. Duplicate post/user reads in a 24-hour UTC window are typically not billed twice. If credits hit zero, history is kept and `/status` records the error.
 
-It notifies for `GLOBAL_RESET`, `BANKED_RESET`, `UPCOMING_RESET`, and `RESET_COMPLETED`. Teasers notify only at high confidence. `UNRELATED` never notifies. Each event status is sent once per provider.
+## Vercel
+
+1. Import this GitHub repository.
+2. Add environment variables in the dashboard (do not upload `.env.local` to git).
+3. Run `supabase/migrations/*.sql`.
+4. Deploy.
+5. Attach a custom domain; keep DNS at the registrar.
+6. Point cron-job.org at `/api/cron/check-tibo`.
+7. Confirm `/status` shows database connected, AI online, and a fresh last check.
 
 ## Testing
 
@@ -176,36 +131,27 @@ It notifies for `GLOBAL_RESET`, `BANKED_RESET`, `UPCOMING_RESET`, and `RESET_COM
 pnpm test
 ```
 
-Coverage includes global/banked/upcoming/completed/teaser/unrelated posts, tomorrow and next-hour parsing, timezone conversion, event correlation, duplicate posts, duplicate cron runs, X failures, AI failures, invalid JSON, and cron auth.
+Manual ingest is `/dev/ingest` when `ALLOW_MANUAL_INGEST=true` or `NODE_ENV !== production`.
 
-Manual pipeline samples live at `/dev/ingest` when `ALLOW_MANUAL_INGEST=true` or `NODE_ENV !== production`.
+## Security
 
-Historical rebuild:
-
-```bash
-pnpm import-history data/sample-history.json
-```
-
-Imports do not send live notifications.
-
-## Security notes
-
-- Cron routes return 401 without `Authorization: Bearer CRON_SECRET`.
-- Service role, X, AI, and cron secrets are server-only.
-- LLM output is Zod-validated before insert.
-- Post content is rendered as text, not HTML.
-- RLS is enabled; `anon` / `authenticated` can only `SELECT`.
+- Cron returns 401 without `Authorization: Bearer CRON_SECRET`.
+- Service role, X, AI, cron, and Telegram secrets are server-only.
+- LLM JSON is Zod-validated before insert.
+- Post text is rendered as text, not HTML.
+- RLS: `anon` / `authenticated` can `SELECT` only.
 
 ## Troubleshooting
 
 | Symptom | Check |
 | --- | --- |
-| Dashboard empty | Supabase URL/keys and migration |
-| `/status` shows X waiting | `X_BEARER_TOKEN` |
-| Analyses stay pending | `XAI_API_KEY` / `AI_API_KEY` |
-| Cron 401 | `CRON_SECRET` header |
-| Cron 503 | Service role key |
-| Duplicate alerts | Unique `(reset_event_id, provider, notification_key)` |
+| Dashboard empty | Supabase URL/keys and migrations |
+| `/status` AI waiting | `AI_API_KEY` + `AI_PROVIDER=minimax` |
+| Cron 401 | `Authorization: Bearer CRON_SECRET` header, not HTTP basic auth |
+| Cron 401 on `*-wu2-chen.vercel.app` | Deployment Protection; use `tibo.wu2chen.com` |
+| Last check stale | cron-job.org enabled and Test Run 200 |
+| Stale errors on `/status` | Only failures after the latest success are shown |
+| Telegram silent | Bot started, chat id set, then redeploy |
 
 ## Project structure
 
@@ -214,20 +160,8 @@ app/            routes and API handlers
 components/     dashboard, history, settings, ui
 lib/            env, time, validation, queries
 services/       social, ai, reset, notifications, monitor
-supabase/       SQL migration and RLS
+supabase/       SQL migrations and RLS
 scripts/        historical import
 tests/          Vitest suites
 docs/           architecture and source rules
 ```
-
-## Production verification checklist
-
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass
-- [ ] Environment variables are set in Vercel Production
-- [ ] Supabase migration applied
-- [ ] `GET /api/cron/check-tibo` without a bearer token returns 401
-- [ ] Authorized cron writes `monitor_runs`
-- [ ] `/` shows a status card
-- [ ] `/history`, `/status`, and `/settings` render
-- [ ] X outage does not delete posts
-- [ ] Unrelated posts do not notify
