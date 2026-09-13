@@ -27,7 +27,7 @@ export default async function StatusPage() {
     },
     {
       label: "Scheduler",
-      value: snapshot.lastRun ? "GitHub Actions (may delay 5–30 min)" : "Not run yet",
+      value: snapshot.lastRun ? "cron-job.org every 5 min" : "Not run yet",
     },
   ];
 
