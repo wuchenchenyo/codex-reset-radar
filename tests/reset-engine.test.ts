@@ -27,6 +27,7 @@ function analysis(partial: Partial<PostAnalysis>): PostAnalysis {
     estimatedResetWindowEnd: null,
     summary: "summary",
     reasoningSummary: "reason",
+    translationZh: null,
     ...partial,
   });
 }

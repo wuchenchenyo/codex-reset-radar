@@ -27,7 +27,8 @@ Rules:
 - time_expression is the original timing phrase or null.
 - estimated_reset_time is ISO-8601 UTC only when a real clock time can be derived from the post time. If only a date or window is known, set estimated_reset_time to the start of that window and estimated_reset_window_end to the end. Never invent an exact minute.
 - Use the provided post publication time as the reference for relative phrases such as tomorrow, later today, next hour.
-- confidence: 0.90-1.00 very high, 0.75-0.89 high, 0.50-0.74 medium, below 0.50 low.`;
+- confidence: 0.90-1.00 very high, 0.75-0.89 high, 0.50-0.74 medium, below 0.50 low.
+- translation_zh is a faithful Simplified Chinese translation of the original post text. Keep names, @handles, and URLs unchanged. Do not add commentary.`;
 
   const user = JSON.stringify({
     author: post.authorUsername,

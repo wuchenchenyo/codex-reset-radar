@@ -50,6 +50,7 @@ export class InMemoryRadarRepository implements RadarRepository {
     }
     const stored: StoredPost = {
       ...post,
+      contentZh: null,
       id: this.postSeq++,
       createdAt: new Date(),
     };
@@ -100,6 +101,10 @@ export class InMemoryRadarRepository implements RadarRepository {
     };
     this.analyses.set(stored.id, stored);
     this.analysesByPost.set(postId, stored.id);
+    const post = this.posts.get(postId);
+    if (post && analysis.translationZh) {
+      this.posts.set(postId, { ...post, contentZh: analysis.translationZh });
+    }
     return stored;
   }
 
@@ -121,6 +126,7 @@ export class InMemoryRadarRepository implements RadarRepository {
       estimatedResetWindowEnd: null,
       summary: "Analysis pending",
       reasoningSummary: "The model response was unavailable and will be retried.",
+      translationZh: null,
       status: "pending",
       model: null,
       createdAt: new Date(),

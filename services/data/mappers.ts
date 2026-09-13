@@ -13,6 +13,7 @@ export interface PostRow {
   author_name: string;
   author_username: string;
   content: string;
+  content_zh: string | null;
   url: string;
   published_at: string;
   raw_data: Record<string, unknown> | null;
@@ -77,6 +78,7 @@ export function mapPost(row: PostRow): StoredPost {
     authorName: row.author_name,
     authorUsername: row.author_username,
     content: row.content,
+    contentZh: row.content_zh ?? null,
     url: row.url,
     publishedAt: new Date(row.published_at),
     rawData: row.raw_data ?? {},
@@ -104,6 +106,7 @@ export function mapAnalysis(row: AnalysisRow): StoredAnalysis {
       : null,
     summary: row.summary,
     reasoningSummary: row.reasoning_summary,
+    translationZh: null,
     model: row.model,
     createdAt: new Date(row.created_at),
   };

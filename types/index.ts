@@ -76,6 +76,7 @@ export interface SocialPost {
 export interface StoredPost extends SocialPost {
   id: number;
   createdAt: Date;
+  contentZh: string | null;
 }
 
 export interface PostAnalysis {
@@ -92,6 +93,7 @@ export interface PostAnalysis {
   estimatedResetWindowEnd: Date | null;
   summary: string;
   reasoningSummary: string;
+  translationZh: string | null;
 }
 
 export interface StoredAnalysis extends PostAnalysis {

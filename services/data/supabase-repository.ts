@@ -136,6 +136,9 @@ export class SupabaseRadarRepository implements RadarRepository {
       .select("*")
       .single();
     if (error) throw error;
+    if (analysis.translationZh) {
+      await this.client.from("posts").update({ content_zh: analysis.translationZh }).eq("id", postId);
+    }
     return mapAnalysis(data as AnalysisRow);
   }
 

@@ -75,6 +75,7 @@ export const analysisLlmSchema = z.object({
     .min(1)
     .max(1200)
     .transform((value) => value.slice(0, 600)),
+  translation_zh: nullableString.optional(),
 });
 
 export type AnalysisLlmOutput = z.infer<typeof analysisLlmSchema>;
@@ -112,6 +113,7 @@ export function coerceAnalysisPayload(input: unknown): unknown {
     estimated_reset_window_end: raw.estimated_reset_window_end ?? null,
     summary,
     reasoning_summary: reasoning,
+    translation_zh: raw.translation_zh ?? raw.translation ?? raw.zh ?? raw.chinese ?? null,
   };
 }
 
@@ -139,6 +141,7 @@ export function toPostAnalysis(raw: AnalysisLlmOutput): PostAnalysis {
     estimatedResetWindowEnd: parseEstimatedTime(raw.estimated_reset_window_end),
     summary: raw.summary.trim(),
     reasoningSummary: raw.reasoning_summary.trim(),
+    translationZh: raw.translation_zh ?? null,
   };
 }
 

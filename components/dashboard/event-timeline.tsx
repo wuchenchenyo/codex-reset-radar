@@ -1,6 +1,6 @@
 import { categoryLabel, statusLabel } from "@/lib/dashboard/copy";
 import { formatInZone } from "@/lib/time/timezone";
-import { DEFAULT_TIMEZONE, type ResetEventWithPosts } from "@/types";
+import { DEFAULT_TIMEZONE, type ResetEventWithPosts, type StoredPost } from "@/types";
 
 export function EventTimeline({ event }: { event: ResetEventWithPosts | null }) {
   if (!event || event.posts.length === 0) {
@@ -12,12 +12,18 @@ export function EventTimeline({ event }: { event: ResetEventWithPosts | null }) 
     );
   }
 
-  const items = [
+  const items: Array<{
+    id: string;
+    at: Date;
+    title: string;
+    post?: StoredPost;
+    description?: string;
+  }> = [
     ...event.posts.map((post) => ({
       id: `post-${post.id}`,
       at: post.publishedAt,
-      title: "Tibo post",
-      description: post.content.slice(0, 140),
+      title: "源推文",
+      post,
     })),
     {
       id: "status",
@@ -42,7 +48,26 @@ export function EventTimeline({ event }: { event: ResetEventWithPosts | null }) 
               <p className="mt-1 text-xs text-muted-foreground">
                 {formatInZone(item.at, DEFAULT_TIMEZONE)}
               </p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
+              {item.post ? (
+                <div className="mt-2 space-y-2">
+                  <p className="whitespace-pre-wrap text-sm leading-6">{item.post.content}</p>
+                  {item.post.contentZh ? (
+                    <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                      {item.post.contentZh}
+                    </p>
+                  ) : null}
+                  <a
+                    href={item.post.url}
+                    className="inline-flex text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    打开源推文
+                  </a>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
+              )}
             </div>
           </li>
         ))}

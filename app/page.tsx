@@ -23,7 +23,12 @@ export default async function HomePage() {
       ) : null}
       <StatusHero event={snapshot.activeEvent} lastCheckedLabel={lastCheckedLabel} />
       <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-        <LatestSignal post={snapshot.latestPost} analysis={snapshot.latestAnalysis} />
+        <LatestSignal
+          post={snapshot.activeEvent?.posts.at(-1) ?? snapshot.latestPost}
+          analysis={
+            snapshot.activeEvent?.latestAnalysis ?? snapshot.latestAnalysis
+          }
+        />
         <WeeklyResetCard />
       </div>
       <EventTimeline event={snapshot.activeEvent} />
