@@ -2,8 +2,14 @@ name: Check Tibo
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    # GitHub often skips */5 under load. Hit several times per hour instead.
+    - cron: "8,18,28,38,48,58 * * * *"
+    - cron: "3 * * * *"
   workflow_dispatch:
+
+concurrency:
+  group: check-tibo
+  cancel-in-progress: false
 
 jobs:
   ping:
@@ -19,6 +25,7 @@ jobs:
             echo "Missing GitHub secrets APP_URL or CRON_SECRET."
             exit 1
           fi
-          curl -fsS -X GET "${APP_URL%/}/api/cron/check-tibo" \
+          curl --retry 3 --retry-delay 5 --fail-with-body -sS -X GET \
+            "${APP_URL%/}/api/cron/check-tibo" \
             -H "Authorization: Bearer ${CRON_SECRET}" \
             -H "Accept: application/json"
