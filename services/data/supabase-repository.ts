@@ -288,12 +288,16 @@ export class SupabaseRadarRepository implements RadarRepository {
     return mapEvent(data as EventRow);
   }
 
-  async hasNotification(resetEventId: number, notificationKey: string): Promise<boolean> {
+  async hasNotification(
+    resetEventId: number,
+    notificationKey: string,
+    provider = "browser",
+  ): Promise<boolean> {
     const { data, error } = await this.client
       .from("notifications")
       .select("id")
       .eq("reset_event_id", resetEventId)
-      .eq("provider", "browser")
+      .eq("provider", provider)
       .eq("notification_key", notificationKey)
       .maybeSingle();
     if (error) throw error;

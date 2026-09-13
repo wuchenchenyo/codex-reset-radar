@@ -1,4 +1,4 @@
-import { isAiConfigured, isXConfigured } from "@/lib/env/server";
+import { isAiConfigured, isTelegramConfigured, isXConfigured } from "@/lib/env/server";
 import { getMonitorStatus } from "@/lib/queries/radar";
 import { formatDuration } from "@/lib/time/parse-relative";
 
@@ -15,7 +15,10 @@ export default async function StatusPage() {
     { label: "Last successful fetch", value: lastSuccess ? formatDuration(lastSuccess) : "Never" },
     { label: "AI analyzer", value: isAiConfigured() ? "Online" : "Waiting for API key" },
     { label: "Database", value: snapshot.database === "connected" ? "Connected" : snapshot.database },
-    { label: "Notification", value: "Browser queue enabled" },
+    {
+      label: "Notification",
+      value: isTelegramConfigured() ? "Telegram + browser" : "Browser queue only",
+    },
     { label: "Cron", value: snapshot.lastRun ? "Active" : "Not run yet" },
   ];
 

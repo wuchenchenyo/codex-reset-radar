@@ -65,7 +65,7 @@ export interface RadarRepository {
       >
     > & { postId?: number },
   ): Promise<ResetEvent>;
-  hasNotification(resetEventId: number, notificationKey: string): Promise<boolean>;
+  hasNotification(resetEventId: number, notificationKey: string, provider?: string): Promise<boolean>;
   recordNotification(input: {
     resetEventId: number;
     provider: string;

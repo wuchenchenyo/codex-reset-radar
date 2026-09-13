@@ -239,8 +239,12 @@ export class InMemoryRadarRepository implements RadarRepository {
     return next;
   }
 
-  async hasNotification(resetEventId: number, notificationKey: string): Promise<boolean> {
-    return this.notifications.has(`${resetEventId}:${notificationKey}`);
+  async hasNotification(
+    resetEventId: number,
+    notificationKey: string,
+    provider = "browser",
+  ): Promise<boolean> {
+    return this.notifications.has(`${resetEventId}:${provider}:${notificationKey}`);
   }
 
   async recordNotification(input: {
@@ -250,7 +254,7 @@ export class InMemoryRadarRepository implements RadarRepository {
     status: NotificationStatus;
     notificationKey: string;
   }): Promise<void> {
-    const key = `${input.resetEventId}:${input.notificationKey}`;
+    const key = `${input.resetEventId}:${input.provider}:${input.notificationKey}`;
     this.notifications.set(key, {
       id: this.notificationSeq++,
       ...input,

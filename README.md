@@ -166,9 +166,9 @@ Vercel Hobby may not run 5-minute native cron. Keep an external caller as the re
 
 The first provider queues browser notifications. The dashboard polls `/api/notifications/pending` and uses the Notification API when permission is granted.
 
-It notifies for `GLOBAL_RESET`, `BANKED_RESET`, `UPCOMING_RESET`, and `RESET_COMPLETED`. Teasers notify only at high confidence. `UNRELATED` never notifies.
+Set both `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` to also send Telegram messages. Create a bot with [@BotFather](https://t.me/BotFather), start a chat with the bot, then get your chat id from `https://api.telegram.org/bot<token>/getUpdates`.
 
-Telegram, email, Pushover, Discord, and Slack can implement `NotificationProvider` later.
+It notifies for `GLOBAL_RESET`, `BANKED_RESET`, `UPCOMING_RESET`, and `RESET_COMPLETED`. Teasers notify only at high confidence. `UNRELATED` never notifies. Each event status is sent once per provider.
 
 ## Testing
 

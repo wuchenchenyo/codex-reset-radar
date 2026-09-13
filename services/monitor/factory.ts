@@ -1,10 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isAiConfigured } from "@/lib/env/server";
+import { isAiConfigured, isTelegramConfigured } from "@/lib/env/server";
 import { createAnalyzer } from "@/services/ai";
 import type { AIAnalyzer } from "@/services/ai/types";
 import { SupabaseRadarRepository } from "@/services/data/supabase-repository";
 import type { RadarRepository } from "@/services/data/types";
 import { NotificationEngine, QueuedBrowserProvider } from "@/services/notifications/engine";
+import { TelegramProvider } from "@/services/notifications/telegram";
+import type { NotificationProvider } from "@/services/notifications/types";
 import { getDefaultSocialSource } from "@/services/social";
 import { SourceUnavailableError, type SocialSource } from "@/services/social/source";
 
@@ -48,6 +50,10 @@ export function createMonitorStack(options?: {
           : unavailableSource(new SourceUnavailableError("X source unavailable", error));
     }
   }
-  const notifications = new NotificationEngine(repo, [new QueuedBrowserProvider(repo)]);
+  const providers: NotificationProvider[] = [new QueuedBrowserProvider(repo)];
+  if (isTelegramConfigured()) {
+    providers.push(new TelegramProvider(repo));
+  }
+  const notifications = new NotificationEngine(repo, providers);
   return { source, analyzer, repo, notifications };
 }

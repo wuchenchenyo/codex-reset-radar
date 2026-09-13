@@ -15,6 +15,8 @@ const serverEnvSchema = z.object({
   CRON_SECRET: z.string().optional(),
   ALLOW_MANUAL_INGEST: z.string().optional(),
   DEFAULT_TIMEZONE: z.string().optional(),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_CHAT_ID: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -39,6 +41,8 @@ export function getServerEnv(): ServerEnv {
     CRON_SECRET: emptyToUndefined(process.env.CRON_SECRET),
     ALLOW_MANUAL_INGEST: emptyToUndefined(process.env.ALLOW_MANUAL_INGEST),
     DEFAULT_TIMEZONE: emptyToUndefined(process.env.DEFAULT_TIMEZONE),
+    TELEGRAM_BOT_TOKEN: emptyToUndefined(process.env.TELEGRAM_BOT_TOKEN),
+    TELEGRAM_CHAT_ID: emptyToUndefined(process.env.TELEGRAM_CHAT_ID),
   });
 }
 
@@ -54,6 +58,11 @@ export function isAiConfigured(): boolean {
 
 export function isXConfigured(): boolean {
   return Boolean(getServerEnv().X_BEARER_TOKEN);
+}
+
+export function isTelegramConfigured(): boolean {
+  const env = getServerEnv();
+  return Boolean(env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID);
 }
 
 export function isManualIngestAllowed(): boolean {

@@ -33,9 +33,8 @@ export class NotificationEngine {
   async notify(event: ResetEvent): Promise<number> {
     const level = notificationLevelFor(event);
     if (!level) return 0;
-    const key = `${event.status}:${event.type}`;
-    if (await this.repo.hasNotification(event.id, key)) return 0;
 
+    const key = `${event.status}:${event.type}`;
     const copy = notificationCopy(event);
     const payload: NotificationPayload = {
       event,
@@ -47,6 +46,7 @@ export class NotificationEngine {
 
     let sent = 0;
     for (const provider of this.providers) {
+      if (await this.repo.hasNotification(event.id, key, provider.id)) continue;
       try {
         await provider.send(payload);
         sent += 1;
