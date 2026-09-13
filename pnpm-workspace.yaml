@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: set this to true or false
+  sharp: false
+  unrs-resolver: false
+minimumReleaseAgeExclude:
+  - '@next/swc-win32-x64-msvc@16.3.5'

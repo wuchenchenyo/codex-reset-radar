@@ -1,0 +1,17 @@
+[
+  {
+    "externalId": "sample-teaser",
+    "publishedAt": "2026-09-12T18:00:00.000Z",
+    "content": "Something fun tomorrow 👀"
+  },
+  {
+    "externalId": "sample-upcoming",
+    "publishedAt": "2026-09-13T16:00:00.000Z",
+    "content": "Reset coming tomorrow."
+  },
+  {
+    "externalId": "sample-global",
+    "publishedAt": "2026-09-13T19:00:00.000Z",
+    "content": "I've reset usage limits for all ChatGPT Work and Codex users."
+  }
+]
