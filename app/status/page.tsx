@@ -19,7 +19,16 @@ export default async function StatusPage() {
       label: "Notification",
       value: isTelegramConfigured() ? "Telegram + browser" : "Browser queue only",
     },
-    { label: "Cron", value: snapshot.lastRun ? "Active" : "Not run yet" },
+    {
+      label: "Last run",
+      value: snapshot.lastRun
+        ? `${snapshot.lastRun.status}${snapshot.lastRun.error ? ` · ${snapshot.lastRun.error}` : ""}`
+        : "Not run yet",
+    },
+    {
+      label: "Scheduler",
+      value: snapshot.lastRun ? "GitHub Actions (may delay 5–30 min)" : "Not run yet",
+    },
   ];
 
   return (

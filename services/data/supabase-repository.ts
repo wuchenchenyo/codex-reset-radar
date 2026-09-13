@@ -399,12 +399,17 @@ export class SupabaseRadarRepository implements RadarRepository {
   }
 
   async getRecentRunErrors(limit = 8): Promise<string[]> {
-    const { data, error } = await this.client
+    const lastSuccess = await this.getLatestSuccessfulRun();
+    let query = this.client
       .from("monitor_runs")
       .select("error")
       .not("error", "is", null)
       .order("started_at", { ascending: false })
       .limit(limit);
+    if (lastSuccess) {
+      query = query.gt("started_at", lastSuccess.startedAt.toISOString());
+    }
+    const { data, error } = await query;
     if (error) throw error;
     return (data ?? []).map((row) => row.error as string);
   }

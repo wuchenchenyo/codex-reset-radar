@@ -309,11 +309,13 @@ export class InMemoryRadarRepository implements RadarRepository {
   }
 
   async getRecentRunErrors(limit = 5): Promise<string[]> {
+    const lastSuccess = [...this.runs].reverse().find((run) => run.status === "success");
     return this.runs
       .filter((run) => run.error)
+      .filter((run) => !lastSuccess || run.startedAt > lastSuccess.startedAt)
       .slice(-limit)
       .reverse()
-      .map((run) => run.error!) ;
+      .map((run) => run.error!);
   }
 
   async getEventStats() {
